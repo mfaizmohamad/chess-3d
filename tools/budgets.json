@@ -1,0 +1,17 @@
+{
+  "note": "ceilings for the start position at quality=low, 1280x720: 1.5x measured (ready time: 5x, at least 30000 ms). Rewrite with: node test/smoke.mjs --write-budgets",
+  "calls": 266,
+  "triangles": 6302646,
+  "geometries": 194,
+  "textures": 41,
+  "programs": 26,
+  "readyMs": 40335,
+  "measured": {
+    "calls": 177,
+    "triangles": 4201764,
+    "geometries": 129,
+    "textures": 27,
+    "programs": 17,
+    "readyMs": 8067
+  }
+}

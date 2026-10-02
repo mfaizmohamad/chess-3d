@@ -1,0 +1,114 @@
+#!/usr/bin/env sh
+
+# Open chess-3d in Claude Code, oriented, with the engineering skills loaded.
+# Usage: cc-chess3d [directory] [--fresh] [--dry-run] [claude arguments...]
+#
+# Sourced by the cc-chess3d shell function in ~/.zshrc, so that the `cd`
+# survives Claude exiting. Also runnable directly (./bin/cc-chess3d), in which
+# case the cd applies only to the subshell.
+#
+# The first argument is the directory to start in when it is an absolute path
+# (a worktree, say). With no such argument it starts in the main clone.
+#
+# By default Claude starts with an opening prompt: read the private restart
+# prompt and the files it lists, summarise the state, and wait.
+#   --fresh     skip the opening prompt and start a plain session
+#   --dry-run   print the final claude command and exit, run nothing
+# Every other argument is passed through to claude. Resume and print modes
+# (-c, --continue, -r, --resume, -p, --print) also skip the opening prompt, as
+# the prompt would clash with them.
+
+SKILLS="$HOME/code/mattpocock-skills"
+PRIVATE="$HOME/code/chess-3d-private"
+OPENING="Read ~/code/chess-3d-private/RESTART-PROMPT.md and the files it lists, in that order, summarise the state in five lines, and wait for my instruction. Do not run commands or change files."
+
+# A first argument that is not a flag is the directory to start in. It must be
+# absolute: a relative one would resolve against whatever cwd the caller had.
+case "$1" in
+  /*) REPO="$1"; shift ;;
+  "") [ "$#" -gt 0 ] && shift; REPO="$HOME/code/chess-3d" ;;   # shift only if there is an argument to drop
+  *)  REPO="$HOME/code/chess-3d" ;;
+esac
+
+# Take --fresh and --dry-run out of the arguments, keep the order of the rest.
+FRESH=0
+DRY=0
+N=$#
+while [ "$N" -gt 0 ]; do
+  A="$1"; shift; N=$((N - 1))
+  case "$A" in
+    --fresh)   FRESH=1 ;;
+    --dry-run) DRY=1 ;;
+    -c|--continue|-r|--resume|-p|--print) FRESH=1; set -- "$@" "$A" ;;
+    *) set -- "$@" "$A" ;;
+  esac
+done
+
+if [ ! -d "$REPO" ]; then
+  echo "✗ $REPO is not a directory"
+  # `return` when sourced, `exit` when run directly (exit would close the shell).
+  return 1 2>/dev/null || exit 1
+fi
+
+# Quiet on failure like every other check here, rather than leaking cd's stderr.
+if ! cd "$REPO" 2>/dev/null; then
+  echo "✗ cannot enter $REPO"
+  return 1 2>/dev/null || exit 1
+fi
+
+# GitHub account: bop-del, not the HeyJobs one. Warn only.
+if command -v gh > /dev/null 2>&1; then
+  GH_USER=$(gh api user --jq .login 2>/dev/null)
+  case "$GH_USER" in
+    bop-del) echo "  ✓ GitHub: bop-del" ;;
+    "")      echo "  ⚠ GitHub not logged in (run 'gh auth login')" ;;
+    *)       echo "  ⚠ GitHub account is '$GH_USER' (run 'gh auth switch --user bop-del')" ;;
+  esac
+else
+  echo "  ⚠ gh CLI missing"
+fi
+
+# Engineering skills as a plugin (Matt Pocock), passed the same way as
+# cc-chesslines does: --plugin-dir in front of the user's arguments.
+if [ -d "$SKILLS/.claude-plugin" ]; then
+  echo "  ✓ Skills: mattpocock-skills"
+  set -- --plugin-dir "$SKILLS" "$@"
+else
+  echo "  ⚠ Skills repo missing: $SKILLS"
+  echo "    git clone https://github.com/mattpocock/skills.git $SKILLS"
+fi
+
+# Private notes repo, readable from this session. --add-dir takes a list, so it
+# goes before --plugin-dir, which ends the list.
+if [ -d "$PRIVATE" ]; then
+  echo "  ✓ Private notes: $PRIVATE"
+  set -- --add-dir "$PRIVATE" "$@"
+else
+  echo "  ⚠ Private notes missing: $PRIVATE"
+fi
+
+# The opening prompt is claude's positional argument. It goes first, because
+# --add-dir would otherwise swallow it as one more directory.
+if [ "$FRESH" -eq 0 ]; then
+  echo "  ✓ Oriented start (--fresh skips it)"
+  set -- "$OPENING" "$@"
+else
+  echo "  ✓ Fresh start, no opening prompt"
+fi
+
+echo "  ✓ Directory: $PWD"
+echo ""
+
+if [ "$DRY" -eq 1 ]; then
+  # Print the command with each argument single-quoted, so it can be pasted.
+  printf 'claude'
+  for A in "$@"; do
+    printf " '%s'" "$(printf '%s' "$A" | sed "s/'/'\\\\''/g")"
+  done
+  printf '\n'
+  return 0 2>/dev/null || exit 0
+fi
+
+# `command claude`, not `exec` because this file is sourced, and exec would replace
+# the interactive shell instead of returning to it.
+command claude "$@"

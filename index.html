@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Chess 3D entry page -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#07080c">
+<title>Chess 3D</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='56' fill='%23d8b468'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+<canvas id="stage" aria-label="3D chessboard"></canvas>
+
+<div id="loader" role="status" aria-live="polite">
+  <div class="loader-card">
+    <div class="loader-mark" aria-hidden="true">♞︎</div>
+    <h1>Chess 3D</h1>
+    <p class="loader-sub">Sculpting the board and pieces</p>
+    <div class="loader-bar"><i id="loader-fill"></i></div>
+    <p class="loader-step" id="loader-step">Starting</p>
+    <p class="loader-err" id="loader-err" hidden></p>
+  </div>
+</div>
+
+<div id="hud"></div>
+<div id="banner" hidden></div>
+<div id="promo" hidden></div>
+<div id="toast" aria-live="polite"></div>
+
+<script>
+  // if the game script never ran (a browser too old to parse it, a failed download), say so instead of loading forever
+  setTimeout(function () {
+    var l = document.getElementById('loader');
+    if (!l || window.__chessBooted) return;
+    var st = document.getElementById('loader-step'), er = document.getElementById('loader-err');
+    if (st) st.textContent = 'Could not start';
+    if (er) { er.hidden = false; er.textContent = 'Reload the page, or use a current browser with WebGL 2 (for example Chrome, Edge, Firefox or Safari 15 or later).'; }
+  }, 20000);
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

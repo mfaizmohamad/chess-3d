@@ -1,0 +1,45 @@
+{
+  "name": "chess-3d",
+  "version": "1.0.0",
+  "description": "A 3D chessboard for the browser: marble and walnut board, sculpted Staunton pieces, studio lighting, and a board you can turn on all three axes. three.js, fully procedural, no assets.",
+  "keywords": [
+    "threejs",
+    "webgl",
+    "chess",
+    "3d",
+    "procedural",
+    "browser-game",
+    "vite"
+  ],
+  "homepage": "https://bop-del.github.io/chess-3d/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bop-del/chess-3d.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bop-del/chess-3d/issues"
+  },
+  "license": "MIT",
+  "author": "Boris Diebold",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "test": "node test/run.mjs",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0",
+    "puppeteer-core": "^25.12.0",
+    "vite": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
